@@ -1,0 +1,90 @@
+buildscript {
+	ext {
+		kotlinVersion = '1.3.50'
+		springBootVersion = '2.2.2.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+	}
+}
+
+plugins {
+	id 'com.google.cloud.tools.jib' version '1.8.0'
+	id "com.gorylenko.gradle-git-properties" version "2.2.0"
+}
+
+
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-spring'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'org.bk.samples'
+version = '0.0.2-SNAPSHOT'
+ext {
+	sourceCompatibility = 11
+	targetCompatibility = 11
+}
+compileKotlin {
+	kotlinOptions {
+		freeCompilerArgs = ["-Xjsr305=strict"]
+		jvmTarget = "1.8"
+	}
+}
+compileTestKotlin {
+	kotlinOptions {
+		freeCompilerArgs = ["-Xjsr305=strict"]
+		jvmTarget = "1.8"
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url 'https://s3-us-west-2.amazonaws.com/dynamodb-local/release'
+	}
+}
+
+dependencies {
+	implementation('org.springframework.boot:spring-boot-starter-actuator')
+	implementation('org.springframework.boot:spring-boot-starter-webflux')
+	implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
+	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("io.projectreactor.addons:reactor-extra")
+
+	implementation("software.amazon.awssdk:sns")
+	implementation("software.amazon.awssdk:sqs")
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: "junit", module: "junit"
+	}
+	testImplementation("org.junit.jupiter:junit-jupiter-api")
+	testRuntime("org.junit.jupiter:junit-jupiter-engine")
+
+	testImplementation('io.projectreactor:reactor-test')
+
+	testImplementation("org.mockito:mockito-core:2.23.4")
+	testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
+	testImplementation("org.testcontainers:junit-jupiter:1.10.4")
+
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom 'software.amazon.awssdk:bom:2.10.39'
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
+
+bootRun {
+	jvmArgs = ['-Dspring.profiles.active=local']
+}
