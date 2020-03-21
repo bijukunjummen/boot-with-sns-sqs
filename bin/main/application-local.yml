@@ -1,9 +1,0 @@
-aws:
-  sns:
-    endpoint: http://localhost:4575
-    topic-name: "sample-hello-world-topic"
-  sqs:
-    endpoint: http://localhost:4576
-    queue-name: "sample-hello-world-queue"
-server:
-  port: 9099

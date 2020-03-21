@@ -57,6 +57,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("io.projectreactor.addons:reactor-extra")
+	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 
 	implementation("software.amazon.awssdk:sns")
 	implementation("software.amazon.awssdk:sqs")

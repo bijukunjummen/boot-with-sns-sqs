@@ -3,13 +3,19 @@
 This sample demonstrates an end to end reactive application using Spring Boot 2 Webflux
 and reactive/non-blocking AWS SDK 2+
 
-## Setting up a local AWS DynamoDB
+## Setting up a local stack version of SNS/SQS
 
-Follow the instructions [here](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html)
-to setup a local version of DynamoDB.
+Follow the instructions [here](https://github.com/localstack/localstack)
+to setup a local version of SNS/SQS.
 
-Once DynamoDB is running, start up the application using
+Start up localstack:
 
+```
+localstack start --docker
+```
+
+
+## Start up application:
 ```
 ./gradlew bootRun
 ```

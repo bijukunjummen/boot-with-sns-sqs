@@ -1,14 +1,15 @@
 package sample.msg
 
+import com.nike.content.notary.message.SnsEventReceiver
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.stereotype.Component
-import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
-import software.amazon.awssdk.services.sqs.model.Message
-import software.amazon.awssdk.services.sqs.model.SqsException
+import reactor.core.scheduler.Schedulers
+import reactor.kotlin.core.util.function.component1
+import reactor.kotlin.core.util.function.component2
 
 @SpringBootApplication
 @EnableConfigurationProperties(value = [SnsProperties::class, SqsProperties::class])
@@ -19,18 +20,20 @@ fun main(args: Array<String>) {
 }
 
 @Component
-class MessageListenerRunner(private val messageListenerRunner: MessageListener): ApplicationRunner {
+class MessageListenerRunner(private val eventReceiver: SnsEventReceiver) : ApplicationRunner {
 
     override fun run(args: ApplicationArguments?) {
-        messageListenerRunner.listen()
-                .map { tup ->
-                    val message = tup.t1
-                    val deleteHandle: (Message) -> Boolean = tup.t2
-                    println("Receieved message: ${message.body()}")
-                    deleteHandle(message)
+        eventReceiver.listen()
+            .subscribeOn(Schedulers.newElastic("pollingThread"))
+            .publishOn(Schedulers.parallel(), 5)
+            .subscribe({ (message: String, deleteHandle: () -> Unit) ->
+                LOGGER.info("Processed Message $message")
+                deleteHandle()
+            }, { t -> LOGGER.error(t.message, t) })
+    }
 
-                }
-                .subscribe()
+    companion object {
+        val LOGGER = loggerFor<MessageListenerRunner>()
     }
 
 }
