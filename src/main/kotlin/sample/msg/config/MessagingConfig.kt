@@ -1,7 +1,7 @@
 package sample.msg.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.nike.content.notary.message.SnsEventReceiver
+import sample.msg.SnsEventReceiver
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.util.StringUtils

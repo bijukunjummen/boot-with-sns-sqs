@@ -1,91 +1,86 @@
 buildscript {
-	ext {
-		kotlinVersion = '1.3.50'
-		springBootVersion = '2.2.2.RELEASE'
-	}
-	repositories {
-		mavenCentral()
-	}
-	dependencies {
-		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
-		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
-	}
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+    }
 }
 
 plugins {
-	id 'com.google.cloud.tools.jib' version '1.8.0'
-	id "com.gorylenko.gradle-git-properties" version "2.2.0"
+    id 'com.google.cloud.tools.jib' version '1.8.0'
+    id "com.gorylenko.gradle-git-properties" version "2.2.0"
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.61' apply false
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.61' apply false
 }
 
 
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
 
 group = 'org.bk.samples'
 version = '0.0.2-SNAPSHOT'
 ext {
-	sourceCompatibility = 11
-	targetCompatibility = 11
+    sourceCompatibility = 11
+    targetCompatibility = 11
 }
 compileKotlin {
-	kotlinOptions {
-		freeCompilerArgs = ["-Xjsr305=strict"]
-		jvmTarget = "1.8"
-	}
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "1.8"
+    }
 }
 compileTestKotlin {
-	kotlinOptions {
-		freeCompilerArgs = ["-Xjsr305=strict"]
-		jvmTarget = "1.8"
-	}
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "1.8"
+    }
 }
 
 repositories {
-	mavenCentral()
-	maven {
-		url 'https://s3-us-west-2.amazonaws.com/dynamodb-local/release'
-	}
+    mavenCentral()
+    maven {
+        url 'https://s3-us-west-2.amazonaws.com/dynamodb-local/release'
+    }
 }
 
 dependencies {
-	implementation('org.springframework.boot:spring-boot-starter-actuator')
-	implementation('org.springframework.boot:spring-boot-starter-webflux')
-	implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("io.projectreactor.addons:reactor-extra")
-	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+    implementation('org.springframework.boot:spring-boot-starter-actuator')
+    implementation('org.springframework.boot:spring-boot-starter-webflux')
+    implementation('com.fasterxml.jackson.module:jackson-module-kotlin')
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.projectreactor.addons:reactor-extra")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 
-	implementation("software.amazon.awssdk:sns")
-	implementation("software.amazon.awssdk:sqs")
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: "junit", module: "junit"
-	}
-	testImplementation("org.junit.jupiter:junit-jupiter-api")
-	testRuntime("org.junit.jupiter:junit-jupiter-engine")
+    implementation("software.amazon.awssdk:sns")
+    implementation("software.amazon.awssdk:sqs")
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: "junit", module: "junit"
+    }
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine")
 
-	testImplementation('io.projectreactor:reactor-test')
+    testImplementation('io.projectreactor:reactor-test')
 
-	testImplementation("org.mockito:mockito-core:2.23.4")
-	testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
-	testImplementation("org.testcontainers:junit-jupiter:1.10.4")
+    testImplementation("org.mockito:mockito-core:2.23.4")
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
+    testImplementation("org.testcontainers:junit-jupiter:1.10.4")
 
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }
 
 dependencyManagement {
-	imports {
-		mavenBom 'software.amazon.awssdk:bom:2.10.39'
-	}
+    imports {
+        mavenBom 'software.amazon.awssdk:bom:2.10.39'
+    }
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 bootRun {
-	jvmArgs = ['-Dspring.profiles.active=local']
+    jvmArgs = ['-Dspring.profiles.active=local']
 }

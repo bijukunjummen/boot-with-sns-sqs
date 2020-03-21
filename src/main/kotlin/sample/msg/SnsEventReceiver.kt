@@ -1,4 +1,4 @@
-package com.nike.content.notary.message
+package sample.msg
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory

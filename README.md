@@ -1,7 +1,6 @@
-## Sample With Spring Boot Webflux and DynamoDB (using AWS SDK 2+)
+## Sample With Spring Boot Webflux and SNS/SQS (using AWS SDK 2+)
 
-This sample demonstrates an end to end reactive application using Spring Boot 2 Webflux
-and reactive/non-blocking AWS SDK 2+
+This sample demonstrates an end to end reactive application using Spring Boot 2 Webflux and reactive/non-blocking AWS SDK 2+
 
 ## Setting up a local stack version of SNS/SQS
 
@@ -11,7 +10,9 @@ to setup a local version of SNS/SQS.
 Start up localstack:
 
 ```
-localstack start --docker
+cd localstack
+./start-localstack-mac.sh
+# OR docker-compose up
 ```
 
 
@@ -23,37 +24,17 @@ localstack start --docker
 
 ## Testing
 
-Make sure that a table has been created in dynamoDB:
+Send a message to SNS:
 
 ```
- aws --endpoint-url=http://localhost:8000 dynamodb describe-table --table-name hotels
+aws --endpoint http://localhost:4575 sns publish --topic-arn arn:aws:sns:us-east-1:123456789012:sample-hello-world-topic --message hello
 ```
 
-Create Hotel entities:
-
-```
-http -v :8080/hotels id=1 name=test1 address=address1 zip=zip1 state=OR
-http -v :8080/hotels id=2 name=test2 address=address2 zip=zip2 state=OR
-http -v :8080/hotels id=3 name=test3 address=address3 zip=zip3 state=WA
-```
+Watch the application console to see that the message has been processed
 
 
-Get Hotels by State names:
-
 ```
-http "http://localhost:8080/hotels?state=OR"
-http "http://localhost:8080/hotels?state=WA"
-```
-
-Get Hotels by ID:
-
-```
-http "http://localhost:8080/hotels/1"
-http "http://localhost:8080/hotels/2"
-http "http://localhost:8080/hotels/3"
-```
-
-Update Hotel:
-```
-http PUT :8080/hotels id=1 name=test1updated address=address1 zip=zip1 state=OR
-```
+2020-03-20 17:55:57.497  INFO 92661 --- [pollingThread-2] sample.msg.SnsEventReceiver              : Received: [Message(MessageId=e0c0f36e-703d-4bcd-b778-ca7be2c0e60f, ReceiptHandle=e0c0f36e-703d-4bcd-b778-ca7be2c0e60f#3ddb54ad-3cd1-4b63-a535-1d6a62226268, MD5OfBody=21db2e2b56addc516325f67fbd2061ef, Body={"Message": "hello", "Type": "Notification", "TopicArn": "arn:aws:sns:us-east-1:123456789012:sample-hello-world-topic", "MessageId": "14a80e31-36d2-49a6-8d1f-8d46f122ca1f"}, Attributes={}, MessageAttributes={})]
+2020-03-20 17:55:57.497  INFO 92661 --- [     parallel-1] sample.msg.MessageListenerRunner         : Processed Message hello
+2020-03-20 17:55:57.528  INFO 92661 --- [     parallel-1] sample.msg.SnsEventReceiver              : Deleted queue message handle=e0c0f36e-703d-4bcd-b778-ca7be2c0e60f#3ddb54ad-3cd1-4b63-a535-1d6a6222626
+``` 

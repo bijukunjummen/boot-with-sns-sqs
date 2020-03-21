@@ -1,4 +1,4 @@
-package com.nike.content.notary.message
+package sample.msg
 
 import reactor.core.publisher.Flux
 

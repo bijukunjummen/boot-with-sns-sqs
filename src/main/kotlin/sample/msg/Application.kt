@@ -1,6 +1,5 @@
 package sample.msg
 
-import com.nike.content.notary.message.SnsEventReceiver
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
