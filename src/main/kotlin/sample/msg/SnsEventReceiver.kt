@@ -34,7 +34,7 @@ class SnsEventReceiver(
     private val objectMapper: ObjectMapper,
     private val topicName: String,
     private val queueName: String
-): EventReceiver<Tuple2<String, () -> Unit>> {
+) : EventReceiver<Pair<String, () -> Unit>> {
 
     @Volatile
     lateinit var queueUrl: String
@@ -45,7 +45,7 @@ class SnsEventReceiver(
      * @return a tuple with the string representation of the message
      * and the delete handle
      */
-    override fun listen(): Flux<Tuple2<String, () -> Unit>> {
+    override fun listen(): Flux<Pair<String, () -> Unit>> {
         return Flux.generate { sink: SynchronousSink<List<Message>> ->
                 val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl)
@@ -65,7 +65,7 @@ class SnsEventReceiver(
             .map { snsMessage: Message ->
                 val snsMessageBody: String = snsMessage.body()
                 val snsNotification: SnsNotification = readSnsNotification(snsMessageBody)
-                Tuples.of(snsNotification.message, { deleteQueueMessage(snsMessage.receiptHandle(), queueUrl) })
+                snsNotification.message to { deleteQueueMessage(snsMessage.receiptHandle(), queueUrl) }
             }
     }
 
