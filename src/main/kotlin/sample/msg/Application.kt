@@ -1,14 +1,14 @@
 package sample.msg
 
+import org.slf4j.Logger
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
-import reactor.kotlin.core.util.function.component1
-import reactor.kotlin.core.util.function.component2
 
 @SpringBootApplication
 @EnableConfigurationProperties(value = [SnsProperties::class, SqsProperties::class])
@@ -19,20 +19,16 @@ fun main(args: Array<String>) {
 }
 
 @Component
-class MessageListenerRunner(private val eventReceiver: SnsEventReceiver) : ApplicationRunner {
+class MessageListenerRunner(private val eventReceiver: SnsEventHandler) : ApplicationRunner {
 
     override fun run(args: ApplicationArguments?) {
-        eventReceiver.listen()
-            .subscribeOn(Schedulers.newElastic("pollingThread"))
-            .publishOn(Schedulers.parallel(), 5)
-            .subscribe({ (message: String, deleteHandle: () -> Unit) ->
-                LOGGER.info("Processed Message $message")
-                deleteHandle()
-            }, { t -> LOGGER.error(t.message, t) })
+        eventReceiver.handle(5) { message ->
+            Mono.fromRunnable { LOGGER.info("Processed Message $message") }
+        }
     }
 
     companion object {
-        val LOGGER = loggerFor<MessageListenerRunner>()
+        val LOGGER: Logger = loggerFor<MessageListenerRunner>()
     }
 
 }
