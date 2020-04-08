@@ -1,9 +1,13 @@
 package sample.msg
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.vavr.control.Try
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.core.publisher.SynchronousSink
+import reactor.core.scheduler.Scheduler
+import reactor.core.scheduler.Schedulers
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
 import reactor.util.function.Tuple2
@@ -28,16 +32,17 @@ import java.io.IOException
 import java.util.function.Function
 import javax.annotation.PostConstruct
 
-class SnsEventReceiver(
+class SnsEventHandler(
     private val snsClient: SnsClient,
     private val sqsClient: SqsClient,
     private val objectMapper: ObjectMapper,
     private val topicName: String,
     private val queueName: String
-) : EventReceiver<Pair<String, () -> Unit>> {
+) : EventHandler {
 
     @Volatile
     lateinit var queueUrl: String
+    val taskScheduler: Scheduler = Schedulers.newElastic("taskHandler")
 
     /**
      * Generate a stream of raw message by by subscribing a queue to a topic
@@ -45,28 +50,38 @@ class SnsEventReceiver(
      * @return a tuple with the string representation of the message
      * and the delete handle
      */
-    override fun listen(): Flux<Pair<String, () -> Unit>> {
-        return Flux.generate { sink: SynchronousSink<List<Message>> ->
-                val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest.builder()
-                    .queueUrl(queueUrl)
-                    .maxNumberOfMessages(5)
-                    .waitTimeSeconds(10)
-                    .build()
+    override fun handle(concurrency: Int, task: (message: String) -> Mono<Void>) {
+        Flux.generate { sink: SynchronousSink<List<Message>> ->
+            val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .maxNumberOfMessages(5)
+                .waitTimeSeconds(10)
+                .build()
 
-                val messages: List<Message> = sqsClient.receiveMessage(receiveMessageRequest).messages()
-                LOGGER.info("Received: $messages")
-                sink.next(messages)
-            }
+            val messages: List<Message> = sqsClient.receiveMessage(receiveMessageRequest).messages()
+            LOGGER.info("Received: $messages")
+            sink.next(messages)
+        }
             .flatMapIterable(Function.identity())
             .doOnError { t: Throwable -> LOGGER.error(t.message, t) }
             .retry()
-            // .publish()
-            // .autoConnect()
             .map { snsMessage: Message ->
                 val snsMessageBody: String = snsMessage.body()
                 val snsNotification: SnsNotification = readSnsNotification(snsMessageBody)
                 snsNotification.message to { deleteQueueMessage(snsMessage.receiptHandle(), queueUrl) }
             }
+            .flatMap({ (message: String, deleteHandle: () -> Unit) ->
+                task(message)
+                    .then(Mono.fromSupplier { Try.of { deleteHandle() } })
+                    .onErrorResume { t ->
+                        LOGGER.error(t.message, t)
+                        Mono.empty()
+                    }
+                    .then()
+                    .subscribeOn(taskScheduler)
+            }, concurrency)
+            .subscribeOn(Schedulers.newElastic("subscribeThread"))
+            .subscribe()
     }
 
     @PostConstruct
@@ -165,7 +180,7 @@ class SnsEventReceiver(
     }
 
     companion object {
-        private val LOGGER = LoggerFactory.getLogger(SnsEventReceiver::class.java)
+        private val LOGGER = LoggerFactory.getLogger(SnsEventHandler::class.java)
         private const val DEAD_QUEUE_SUFFIX = "-dead"
     }
 

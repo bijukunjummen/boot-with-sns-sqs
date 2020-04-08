@@ -1,7 +1,7 @@
 package sample.msg.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import sample.msg.SnsEventReceiver
+import sample.msg.SnsEventHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.util.StringUtils
@@ -63,8 +63,8 @@ class MessagingConfig {
         objectMapper: ObjectMapper,
         sqsProperties: SqsProperties,
         snsProperties: SnsProperties
-    ): SnsEventReceiver {
-        return SnsEventReceiver(
+    ): SnsEventHandler {
+        return SnsEventHandler(
             snsClient,
             sqsClient,
             objectMapper,
