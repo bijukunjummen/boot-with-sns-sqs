@@ -7,17 +7,14 @@ buildscript {
 }
 
 plugins {
-    id 'com.google.cloud.tools.jib' version '1.8.0'
+    id 'com.google.cloud.tools.jib' version '2.7.1'
     id "com.gorylenko.gradle-git-properties" version "2.2.0"
-    id 'org.springframework.boot' version '2.2.5.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.61' apply false
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.61' apply false
+    id 'org.springframework.boot' version '2.4.4'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.31'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.4.31'
 }
 
-
-apply plugin: 'kotlin'
-apply plugin: 'kotlin-spring'
 
 group = 'org.bk.samples'
 version = '0.0.2-SNAPSHOT'
@@ -74,7 +71,7 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom 'software.amazon.awssdk:bom:2.10.39'
+        mavenBom 'software.amazon.awssdk:bom:2.16.23'
     }
 }
 
